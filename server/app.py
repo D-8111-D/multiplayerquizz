@@ -7,6 +7,7 @@ import random
 from flask_cors import CORS
 from quizz_ai import quiz_ai
 from db import mongo
+from auth import auth_bp
 from question_route  import question_bp, get_all
 # Use eventlet as the WSGI server
 
@@ -21,6 +22,7 @@ CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, allow_headers
 mongo.init_app(app)
 # app.register_blueprint(quiz_ai)
 app.register_blueprint(question_bp, url_prefix="/api")
+app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
 @app.route("/")
 def home():
@@ -48,6 +50,24 @@ rooms = {}  # Stores all room objects
 players_in_room = {} # room_code: {player_id: player_data}
 
 # --- UTILITIES ---
+
+# 🔐 TOKEN MIDDLEWARE
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+
+        if not token:
+            return jsonify({"message": "Token missing"}), 401
+
+        try:
+            jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        except:
+            return jsonify({"message": "Invalid token"}), 401
+
+        return f(*args, **kwargs)
+
+    return decorated
 
 
 

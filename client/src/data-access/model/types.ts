@@ -18,9 +18,17 @@ export type Question = {
   question: string;
   options: string[];
   correct_index: number;
+  question_set_id: string;
+  title: string;
+  media?: {
+    image?: string | null;
+    audio?: string | null;
+    video?: string | null;
+  };
   created_by: string;
   created_by_id: string;
   created_by_role: string;
+  createdAt: string;
 };
 export type QuestionSocket = {
   question: string;

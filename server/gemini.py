@@ -4,14 +4,24 @@ import re
 def generate_quiz_from_prompt(topic, count=5):
 
     prompt = f"""
-    Generate {count} MCQ question on {topic}.
-    Return JSON ONLY in this format:
-    {{
-      "question": "",
-      "options": ["A", "B", "C", "D"],
-      "correct_index": ""
-    }}
-    """
+Generate {count} MCQ questions.
+
+STRICT RULES:
+- Return ONLY JSON in this format
+- NO explanation text direct JSON Only
+- NO A, B, C, D labels
+- options must be plain strings
+
+Correct format:
+
+[
+  {{
+    "question": "What is ...?",
+    "options": ["A", "B", "C", "D"],
+    "correct_index": 0
+  }}
+]
+"""
 
     response = requests.post(
         "http://127.0.0.1:11434/api/generate",
@@ -28,6 +38,7 @@ def generate_quiz_from_prompt(topic, count=5):
     print("RAW TEXT FROM MODEL:", data2)
     raw_text = data2
     data = clean_and_parse_questions(raw_text)
+    # data.correct_index = int(data.correct_index)  # convert to int if it's a string
     print("RAW MODEL:", data)
 
 
@@ -59,8 +70,6 @@ def clean_and_parse_questions(raw_text):
     questions = json.loads(json_text)
 
     return questions
-
-
 
 
 

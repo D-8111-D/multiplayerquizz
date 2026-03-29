@@ -8,7 +8,7 @@ import type {
   QuestionSocket,
   Question,
 } from "../data-access/model/types"; // Import types from types.ts
-import QuestionListPanel from "./QuestionListPanel";
+import QuestionListPanel from "../components/QuestionListPanel";
 
 const SERVER_URL = "http://localhost:5000";
 
@@ -20,7 +20,7 @@ const buttonPrimaryClass =
 
 const App: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [view, setView] = useState<View>("HOME");
+  const [view, setView] = useState<View>("LOBBY");
   const [userName, setUserName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [isHost, setIsHost] = useState(false);

@@ -5,12 +5,17 @@ const API = "http://localhost:5000/api/questions";
 
 type Props = {
   onSelectionChange: (questions: Question[]) => void;
+  isActionable: boolean;
 };
 
-export default function QuestionListPanel({ onSelectionChange }: Props) {
+export default function QuestionListPanel({
+  onSelectionChange,
+  isActionable,
+}: Props) {
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [selected, setSelected] = useState<number[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [questionBatch, setQuestionBatch] = useState<Question[]>([]);
 
   const loadQuestions = async () => {
     setLoading(true);
@@ -24,52 +29,63 @@ export default function QuestionListPanel({ onSelectionChange }: Props) {
     loadQuestions();
   }, []);
 
-  const toggleQuestion = (index: number) => {
-    let updated: number[];
+  const toggleQuestion = (questionId: string) => {
+    let updated: string[];
 
-    if (selected.includes(index)) {
-      updated = selected.filter((i) => i !== index);
+    if (selected.includes(questionId)) {
+      updated = selected.filter((i) => i !== questionId);
     } else {
-      updated = [...selected, index];
+      updated = [...selected, questionId];
     }
 
     setSelected(updated);
-    onSelectionChange(updated.map((i) => questions[i]));
+    onSelectionChange(
+      updated
+        .map((i) => questions.find((q) => q._id === i)!)
+        .filter((q) => q !== undefined),
+    );
   };
 
   return (
-    <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-      <h2 className="text-2xl font-bold text-green-400 mb-4">
-        Select Questions
-      </h2>
+    <div className="bg-gradient-to-r from-[#807add] to-[#0f0516]  p-6 border border-gray-700 h-[calc(100%-70px)]">
+      <div className="flex justify-between item-center">
+        <h2 className="text-2xl font-bold text-gray-100 mb-4">
+          {isActionable ? " Select Questions" : "Questions"}
+        </h2>
 
-      <p className="text-sm text-gray-400 mb-4">Selected: {selected.length}</p>
+        <h2 className="text-xl text-gray-400 mb-4 flex justify-start items-center gap-2 ">
+          {isActionable ? "Selected" : "Total Questions"}:{" "}
+          {isActionable ? selected.length : questions.length}
+        </h2>
+      </div>
 
       {loading && <p>Loading questions...</p>}
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto h-[calc(100%-70px)]">
         {questions.map((q, index) => {
-          const isSelected = selected.includes(index);
+          const isSelected = selected.includes(q._id);
 
           return (
             <div
-              key={index}
-              onClick={() => toggleQuestion(index)}
+              key={q._id}
+              onClick={() => isActionable && toggleQuestion(q._id)}
               className={`cursor-pointer p-4 rounded-lg border transition
                 ${
                   isSelected
-                    ? "border-green-500 bg-green-900/40"
+                    ? "border-indigo-500 bg-indigo-900/40"
                     : "border-gray-700 bg-gray-800 hover:bg-gray-700"
                 }`}
             >
-              <h3 className="font-semibold mb-2 text-white">Q{index + 1}</h3>
+              <h3 className="font-semibold mb-2 text-white flex justify-start item-center gap-2">
+                Q{index + 1}{" "}
+                <p className="text-gray-300 line-clamp-3">{q.question}</p>
+              </h3>
 
-              <p className="text-sm text-gray-300 line-clamp-3">{q.question}</p>
               {q.options.map((opt, index) => (
                 <span
-                  className={`text-sm text-gray-300 line-clamp-3 p-1 m-2 border rounded-2xl ${
-                    index == q.correct_index
-                      ? "bg-green-600 text-white"
+                  className={`text-sm text-gray-300 line-clamp-3 p-1 pl-3 m-2 border rounded-2xl ${
+                    index == q.correct_index - 1
+                      ? "bg-gradient-to-r from-indigo-600 to-purple-700 text-white"
                       : "bg-gray-700 text-gray-300"
                   }`}
                 >
@@ -78,7 +94,7 @@ export default function QuestionListPanel({ onSelectionChange }: Props) {
               ))}
 
               {isSelected && (
-                <div className="text-green-400 text-xs mt-2">✓ Selected</div>
+                <div className="text-indigo-400 text-base mt-2">✓ Selected</div>
               )}
             </div>
           );

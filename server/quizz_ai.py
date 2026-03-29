@@ -20,7 +20,7 @@ def generate_questions():
         doc = {
         "question": q["question"],
         "options": q["options"],
-        "correct_index": q["correct_index"], 
+        "correct_index": q["correct_index"] # convert to 1-based index, 
         }
         # mongo.db.questions.insert_one(doc)
         saved.append(doc)

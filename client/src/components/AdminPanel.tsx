@@ -7,11 +7,16 @@ export default function AdminPanel() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 🔥 NEW: Question Set State
+  const [displayQuestionSetForm, setDisplayQuestionSetForm] =
+    useState<boolean>(true);
+  const [questionSetId, setQuestionSetId] = useState<string>("");
+  const [title, setTitle] = useState("");
 
   const [form, setForm] = useState({
     question: "",
     options: ["", "", "", ""],
-    correct_index: 0,
+    correct_index: 1,
   });
 
   // hardcoded user
@@ -23,8 +28,9 @@ export default function AdminPanel() {
   // -------- load ----------
   const loadQuestions = async () => {
     try {
+      if (!questionSetId) return; // 🔥 only load if set is created
       setLoading(true);
-      const res = await fetch(API, {
+      const res = await fetch(`${API}/${questionSetId}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -40,6 +46,16 @@ export default function AdminPanel() {
   useEffect(() => {
     loadQuestions();
   }, []);
+
+  const startNewSet = () => {
+    if (!title) return alert("Enter set title (e.g. Fruits)");
+
+    const id = `SET_${Date.now()}`; // 🔥 unique ID
+    setQuestionSetId(id);
+
+    // alert(`New Question Set Created: ${title}`);
+    setDisplayQuestionSetForm(false);
+  };
 
   // -------- update option ----------
   const updateOption = (i: number, value: string) => {
@@ -57,6 +73,8 @@ export default function AdminPanel() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
+        question_set_id: questionSetId, // 🔥 NEW
+        title: title,
         created_by: userName,
         user_id: userId,
         created_by_role: role,
@@ -67,7 +85,7 @@ export default function AdminPanel() {
     setForm({
       question: "",
       options: ["", "", "", ""],
-      correct_index: 0,
+      correct_index: 1,
     });
 
     loadQuestions();
@@ -87,80 +105,122 @@ export default function AdminPanel() {
   };
 
   return (
-    <div style={styles.page}>
-      <h1 style={styles.heading}>🎯 Admin Question Panel</h1>
+    <div
+      style={styles.page}
+      className="bg-gradient-to-r from-[#1007a1] to-[#280349]"
+    >
+      <h2 style={styles.heading}>🎯 Admin Question Panel</h2>
 
-      {/* -------- FORM CARD -------- */}
-      <div style={styles.card}>
-        <h2 style={styles.cardTitle}>Create New Question</h2>
+      {/* -------- QUESTION SET -------- */}
 
-        <label style={styles.label}>Question</label>
-        <input
-          style={styles.input}
-          value={form.question}
-          placeholder="Enter question text"
-          onChange={(e) => setForm({ ...form, question: e.target.value })}
-        />
-
-        <label style={styles.label}>Options</label>
-        <div style={styles.optionGrid}>
-          {form.options.map((opt, i) => (
-            <input
-              key={i}
-              style={styles.input}
-              value={opt}
-              placeholder={`Option ${i + 1}`}
-              onChange={(e) => updateOption(i, e.target.value)}
-            />
-          ))}
+      {!displayQuestionSetForm && (
+        <div className="w-[100%] rounded-xl p-4 mb-6 shadow">
+          <h2 className="text-gray-900 ">
+            <b>Question Set : {title}</b>
+          </h2>
         </div>
+      )}
 
-        <label style={styles.label}>Correct Option Index (0–3)</label>
-        <input
-          style={styles.input}
-          type="number"
-          min={0}
-          max={3}
-          value={form.correct_index}
-          onChange={(e) =>
-            setForm({ ...form, correct_index: Number(e.target.value) })
-          }
-        />
+      <div className="flex justify-between gap-2">
+        {/* -------- FORM CARD -------- */}
+        {displayQuestionSetForm && (
+          <div
+            style={styles.card}
+            className="bg-gradient-to-r from-[#0f0516] to-[#807add]"
+          >
+            <h2 style={styles.cardTitle}>📦 Create Question Set</h2>
 
-        <button style={styles.primaryBtn} onClick={createQuestion}>
-          ➕ Create Question
-        </button>
-      </div>
+            <input
+              style={styles.input}
+              placeholder="Enter Set Title (e.g. Fruits)"
+              value={title}
+              className="w-24 p-2 rounded bg-black/40 border border-gray-600"
+              onChange={(e) => setTitle(e.target.value)}
+            />
 
-      {/* -------- LIST CARD -------- */}
-      <div style={styles.card}>
-        <h2 style={styles.cardTitle}>📋 Question List</h2>
+            <div className="flex justify-end">
+              <button style={styles.primaryBtn} onClick={startNewSet}>
+                ➕ Start New Set
+              </button>
+            </div>
+          </div>
+        )}
+        {!displayQuestionSetForm && (
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>Create New Question</h2>
 
-        {loading && <p>Loading questions...</p>}
-        {error && <p style={{ color: "red" }}>{error}</p>}
+            <label style={styles.label}>Question</label>
+            <input
+              style={styles.input}
+              value={form.question}
+              placeholder="Enter question text"
+              onChange={(e) => setForm({ ...form, question: e.target.value })}
+            />
 
-        {questions.length === 0 && !loading && <p>No questions found</p>}
-
-        {questions.map((q) => (
-          <div key={q._id} style={styles.questionItem}>
-            <div>
-              <h3 style={{ margin: 0 }}>{q.question}</h3>
-              <p style={{ margin: "5px 0" }}>
-                Options: {q.options.join(" | ")}
-              </p>
-              <small>
-                Correct: {q.correct_index} | By: {q.created_by}
-              </small>
+            <label style={styles.label}>Options</label>
+            <div style={styles.optionGrid}>
+              {form.options.map((opt, i) => (
+                <input
+                  key={i}
+                  style={styles.input}
+                  value={opt}
+                  placeholder={`Option ${i + 1}`}
+                  onChange={(e) => updateOption(i, e.target.value)}
+                />
+              ))}
             </div>
 
-            <button
-              style={styles.deleteBtn}
-              onClick={() => deleteQuestion(q._id)}
-            >
-              🗑 Delete
+            <label style={styles.label}>Correct Option Index (1-4)</label>
+            <input
+              style={styles.input}
+              type="number"
+              min={1}
+              max={4}
+              value={form.correct_index}
+              onChange={(e) =>
+                setForm({ ...form, correct_index: Number(e.target.value) })
+              }
+            />
+
+            <button style={styles.primaryBtn} onClick={createQuestion}>
+              ➕ Create Question
             </button>
           </div>
-        ))}
+        )}
+
+        {/* -------- LIST CARD -------- */}
+        <div
+          style={styles.card}
+          className="bg-gradient-to-r from-[#0f0516] to-[#807add]"
+        >
+          <h2 style={styles.cardTitle}>📋 Question List</h2>
+
+          {loading && <p>Loading questions...</p>}
+          {error && <p style={{ color: "red" }}>{error}</p>}
+
+          {questions.length === 0 && !loading && <p>No questions found</p>}
+
+          {questions.map((q) => (
+            <div key={q._id} style={styles.questionItem}>
+              <div>
+                <h3 style={{ margin: 0 }}>{q.question}</h3>
+                <p style={{ margin: "5px 0" }}>
+                  Options: {q.options.join(" | ")}
+                </p>
+                <small>
+                  Correct: {q.options[q.correct_index - 1]} | By: {q.created_by}
+                </small>
+              </div>
+
+              {/* <button
+                style={styles.deleteBtn}
+                onClick={() => deleteQuestion(q._id)}
+              >
+                🗑 Delete
+              </button> */}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -171,15 +231,16 @@ const styles: { [key: string]: React.CSSProperties } = {
   page: {
     padding: "30px",
     fontFamily: "Arial, sans-serif",
-    background: "#f4f6f8",
-    minHeight: "100vh",
+    height: "calc(100vh - 75px)",
   },
   heading: {
     textAlign: "center",
+    color: "#fff",
     marginBottom: "30px",
+    fontSize: "28px",
   },
   card: {
-    background: "#fff",
+    width: "50%",
     padding: "20px",
     borderRadius: "10px",
     marginBottom: "25px",

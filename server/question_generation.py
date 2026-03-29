@@ -1,5 +1,7 @@
 from bson.objectid import ObjectId
 from datetime import datetime
+
+from flask import jsonify
 from db import mongo
 from question import serialize_question
 
@@ -10,6 +12,8 @@ from question import serialize_question
 def validate_question(data):
     if not data.get("question"):
         return "Question is required"
+    if not data.get("title"):
+        return "Title required"
 
     if not isinstance(data.get("options"), list) or len(data["options"]) < 4:
         return "At least42 options are required"
@@ -35,6 +39,8 @@ def create_question(data):
         "question": data["question"],
         "options": data["options"],
         "correct_index": data["correct_index"],
+        "question_set_id": data["question_set_id"],
+        "title": data["title"],
         "created_by": data["created_by"],
         "created_by_role": data["created_by_role"],
         "created_by_id": data["created_by_id"],
@@ -57,6 +63,14 @@ def get_all_questions():
     questions = mongo.db.questions.find()
     return [serialize_question(q) for q in questions]
 
+
+# -------------------------------
+# 🔹 READ ALL BY QUESTION SET ID
+# -------------------------------
+
+def get_questions_by_setId(set_id):
+    questions = (mongo.db.questions.find({"question_set_id": set_id}))
+    return [serialize_question(q) for q in questions]
 
 # -------------------------------
 # 🔹 READ ONE
@@ -94,7 +108,6 @@ def update_question(qid, data):
         return {"error": "Question not found"}, 404
 
     return {"message": "Updated successfully"}, 200
-
 
 # -------------------------------
 # 🔹 DELETE
