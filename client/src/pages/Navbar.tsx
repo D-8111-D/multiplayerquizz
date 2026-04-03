@@ -31,7 +31,7 @@ const Navbar: React.FC<Props> = ({
           onClick={goHome}
           className="text-2xl font-bold cursor-pointer text-indigo-400"
         >
-          QuizStream
+          Quiz Blitz
         </h1>
 
         <div className="flex gap-4 items-center">

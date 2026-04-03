@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Question } from "../data-access/model/types";
+import QuestionListPanel from "./QuestionListPanel";
 
 const API = "http://localhost:5000/api/questions";
 
@@ -10,6 +11,7 @@ export default function AdminPanel() {
   // 🔥 NEW: Question Set State
   const [displayQuestionSetForm, setDisplayQuestionSetForm] =
     useState<boolean>(true);
+  const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
   const [questionSetId, setQuestionSetId] = useState<string>("");
   const [title, setTitle] = useState("");
 
@@ -28,9 +30,9 @@ export default function AdminPanel() {
   // -------- load ----------
   const loadQuestions = async () => {
     try {
-      if (!questionSetId) return; // 🔥 only load if set is created
+      // if (!questionSetId) return; // 🔥 only load if set is created
       setLoading(true);
-      const res = await fetch(`${API}/${questionSetId}`, {
+      const res = await fetch(`${API}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -114,8 +116,8 @@ export default function AdminPanel() {
       {/* -------- QUESTION SET -------- */}
 
       {!displayQuestionSetForm && (
-        <div className="w-[100%] rounded-xl p-4 mb-6 shadow">
-          <h2 className="text-gray-900 ">
+        <div className="w-[100%] rounded-xl p-4 mb-6 shadow bg-gradient-to-r from-[#0f0516] to-[#807add] ">
+          <h2 className="text-white ">
             <b>Question Set : {title}</b>
           </h2>
         </div>
@@ -126,7 +128,7 @@ export default function AdminPanel() {
         {displayQuestionSetForm && (
           <div
             style={styles.card}
-            className="bg-gradient-to-r from-[#0f0516] to-[#807add]"
+            className="w-[40%] bg-gradient-to-r from-[#0f0516] to-[#807add]"
           >
             <h2 style={styles.cardTitle}>📦 Create Question Set</h2>
 
@@ -146,7 +148,10 @@ export default function AdminPanel() {
           </div>
         )}
         {!displayQuestionSetForm && (
-          <div style={styles.card}>
+          <div
+            style={styles.card}
+            className="w-[40%] bg-gradient-to-r from-[#0f0516] to-[#807add]"
+          >
             <h2 style={styles.cardTitle}>Create New Question</h2>
 
             <label style={styles.label}>Question</label>
@@ -187,9 +192,15 @@ export default function AdminPanel() {
             </button>
           </div>
         )}
-
         {/* -------- LIST CARD -------- */}
-        <div
+        <div className="w-[60%]">
+          <QuestionListPanel
+            onSelectionChange={(q) => setSelectedQuestions(q)}
+            isActionable={false}
+          />
+        </div>
+        {/* -------- LIST CARD -------- */}
+        {/* <div
           style={styles.card}
           className="bg-gradient-to-r from-[#0f0516] to-[#807add]"
         >
@@ -210,17 +221,17 @@ export default function AdminPanel() {
                 <small>
                   Correct: {q.options[q.correct_index - 1]} | By: {q.created_by}
                 </small>
-              </div>
+              </div> */}
 
-              {/* <button
+        {/* <button
                 style={styles.deleteBtn}
                 onClick={() => deleteQuestion(q._id)}
               >
                 🗑 Delete
               </button> */}
-            </div>
+        {/* </div>
           ))}
-        </div>
+        </div> */}
       </div>
     </div>
   );

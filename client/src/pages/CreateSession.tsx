@@ -197,22 +197,40 @@ const CreateSession: React.FC<Props> = ({ joinData }) => {
     setAnswerStatus({ qIndex: -1, status: "pending" }); // Reset answer status for next question
   };
 
-  const handleAnswer = (qIndex: number, answer: number) => {
-    const isAlreadyAnswered =
-      answerStatus.qIndex === qIndex && answerStatus.status === "received";
+  const handleAnswer = (qIndex: number, answers: number) => {
+    console.log(
+      "Submitting answer for question %d: option %d",
+      qIndex,
+      answers,
+    );
+    const answer = answers + 1;
+    if (!socket || !roomCode || !roomData) return;
 
-    if (
-      !socket ||
-      !roomCode ||
-      !roomData ||
-      roomData.status !== "IN_GAME" ||
-      isAlreadyAnswered
-    )
-      return;
+    const player = players.find((p) => p.id === socket.id);
+    const alreadyAnswered = player?.answers[qIndex];
 
-    setAnswerStatus({ qIndex, status: "received" });
+    if (alreadyAnswered) return; // prevent duplicate answer
+    console.log("Emitting answer for question %d: option %d", qIndex, answer);
+    socket.emit("submit_answer", {
+      roomCode,
+      qIndex,
+      answer,
+    });
+    // const isAlreadyAnswered =
+    //   answerStatus.qIndex === qIndex + 1 && answerStatus.status === "received";
 
-    socket.emit("submit_answer", { roomCode, qIndex, answer });
+    // if (
+    //   !socket ||
+    //   !roomCode ||
+    //   !roomData ||
+    //   roomData.status !== "IN_GAME" ||
+    //   isAlreadyAnswered
+    // )
+    //   return;
+
+    // setAnswerStatus({ qIndex, status: "received" });
+
+    // socket.emit("submit_answer", { roomCode, qIndex, answer });
   };
 
   // --- UTILITIES ---
@@ -385,7 +403,7 @@ const CreateSession: React.FC<Props> = ({ joinData }) => {
               The Correct Answer Was:
             </p>
             <div className="p-3 bg-gray-600 rounded-lg text-center font-bold text-xl">
-              {question.options[question.correct_index]}
+              {question.options[question.correct_index - 1]}
             </div>
 
             {/* Host controls to advance */}
